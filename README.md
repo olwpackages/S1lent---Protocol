@@ -1,11 +1,16 @@
-<div align="center">
-  <h1>S1lent</h1>
-  <p><strong>Encrypted routes for ordinary IP traffic.</strong></p>
-  <p>An experimental C++20 network overlay for carrying IPv4 and IPv6 packets through configurable relay routes.</p>
-  <p><sub>Windows · TLS 1.3 · AES-256-GCM · UDP · Wintun</sub></p>
-</div>
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=rect&color=0:FFFFFF,100:F8FAFC&height=190&section=header&text=S1lent&fontSize=72&fontColor=111827&fontAlignY=42&desc=ENCRYPTED%20IP%20ROUTING&descSize=16&descAlignY=68&stroke=E5E7EB&strokeWidth=1" width="100%" alt="S1lent — encrypted IP routing">
+</p>
 
-<br>
+<p align="center">
+  <strong>An experimental C++20 overlay for ordinary IPv4 and IPv6 traffic.</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/C%2B%2B-20-00599C?style=flat-square&logo=cplusplus&logoColor=white" alt="C++20">
+  <img src="https://img.shields.io/badge/Windows-target-0078D4?style=flat-square&logo=windows&logoColor=white" alt="Windows target">
+  <img src="https://img.shields.io/badge/OpenSSL-3-721412?style=flat-square&logo=openssl&logoColor=white" alt="OpenSSL 3">
+</p>
 
 ## What it is
 
