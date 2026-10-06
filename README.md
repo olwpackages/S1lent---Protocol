@@ -1,12 +1,39 @@
-# S1lent / Universal IP
+<div align="center">
+  <h1>S1lent</h1>
+  <p><strong>Encrypted routes for ordinary IP traffic.</strong></p>
+  <p>An experimental C++20 network overlay for carrying IPv4 and IPv6 packets through configurable relay routes.</p>
+  <p><sub>Windows · TLS 1.3 · AES-256-GCM · UDP · Wintun</sub></p>
+</div>
 
-S1lent is an experimental encrypted overlay for carrying ordinary IPv4/IPv6 traffic through configurable routes of relay nodes. Universal IP is its routing model, not a replacement IP protocol.
+<br>
 
-The prototype contains a TLS 1.3 server-authenticated handshake, per-session TLS-exported AES-256-GCM keys, route setup, replay checks, static routing, Windows UDP transport, a dynamically loaded Wintun adapter, separate node/client/server executables, and a two-node encrypted round-trip harness.
+## What it is
 
-## Build (Windows, Visual Studio C++ workload)
+S1lent establishes an authenticated control session, derives a unique data key, and carries encrypted packets across a configured sequence of UDP nodes. **Universal IP** is the routing model above S1lent; it is not a new IP protocol or address family.
 
-OpenSSL 3 development headers and libraries are required. With CMake and OpenSSL installed:
+```mermaid
+flowchart LR
+    C[Client] <-->|TLS 1.3 handshake and route setup| S[Server]
+    C -->|Encrypted DATA over UDP| A[Relay A]
+    A --> B[Relay B]
+    B --> S
+    S -->|Encrypted reply| B
+    B --> A
+    A --> C
+```
+
+## Current prototype
+
+| Area | Included |
+| --- | --- |
+| Session setup | TLS 1.3 server verification, route validation, per-session key export |
+| Data path | AES-256-GCM DATA packets, replay checks, UDP relay nodes |
+| IP interface | Optional dynamically loaded Wintun adapter on Windows |
+| Local checks | Unit tests, TLS handshake tests, bidirectional IPv4 path through two relay nodes |
+
+## Build and verify
+
+Requirements: Windows, CMake, a Visual Studio C++ workload, and OpenSSL 3 development files.
 
 ```powershell
 cmake -S . -B build -DOPENSSL_ROOT_DIR="C:/path/to/openssl"
@@ -14,38 +41,36 @@ cmake --build build --config Release
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-Run the local encrypted IP packet check with `build/Release/s1lent-integration.exe` (or `build/s1lent-integration.exe` for a single-configuration generator). The program binds loopback UDP ports and exercises IPv4 DATA in both directions through Client → Node A → Node B → Server → Node B → Node A → Client, using fake IP interfaces instead of modifying host networking.
+The integration executable binds loopback UDP ports and checks encrypted IPv4 packets in both directions. It uses fake IP interfaces and does not change Windows network settings.
 
-The client verifies the TLS server certificate and identity against a trusted PEM certificate. Over that TLS 1.3 channel it requests a configured route and session ID. Both endpoints derive a fresh session key with OpenSSL's TLS exporter before sending DATA.
+## Local message demo
 
-## Local CLI demo
+The sample route in `config/routes.example.conf` uses relay ports `9001` and `9002`, with the server listening on UDP port `9003` and TLS port `9004`.
 
-Start the server and two nodes in three PowerShell terminals from the repository root. The example route in `config/routes.example.conf` sends through ports 9001 and 9002 to server UDP port 9003. Create a local TLS certificate for the demo:
+Create a local certificate:
 
 ```powershell
-$env:OPENSSL_CONF = 'C:\Program Files\Git\ucrt64\etc\ssl\openssl.cnf'
-openssl req -x509 -newkey rsa:2048 -nodes -keyout build/tls-key.pem -out build/tls-cert.pem -days 30 -subj '/CN=localhost' -addext 'subjectAltName=DNS:localhost'
+openssl req -x509 -newkey rsa:2048 -nodes `
+  -keyout build/tls-key.pem -out build/tls-cert.pem `
+  -days 30 -subj '/CN=localhost' `
+  -addext 'subjectAltName=DNS:localhost'
 ```
 
-Terminal 1 (server):
+Run each command in a separate PowerShell window:
 
 ```powershell
 .\build\Release\s1lent-server.exe .\config\routes.example.conf 127.0.0.1 9003 127.0.0.1 9004 .\build\tls-cert.pem .\build\tls-key.pem
 ```
 
-Terminal 2 (Node A):
-
 ```powershell
 .\build\Release\s1lent-node.exe .\config\routes.example.conf 0 127.0.0.1 9001 node-a
 ```
-
-Terminal 3 (Node B):
 
 ```powershell
 .\build\Release\s1lent-node.exe .\config\routes.example.conf 1 127.0.0.1 9002 node-b
 ```
 
-In a fourth terminal, send a message. The handshake sets up the route and derives the session key before DATA:
+Send a message from a fourth window:
 
 ```powershell
 .\build\Release\s1lent-client.exe .\config\routes.example.conf 0.0.0.0 0 localhost 9004 .\build\tls-cert.pem auto 'hello S1lent'
@@ -53,8 +78,14 @@ In a fourth terminal, send a message. The handshake sets up the route and derive
 
 The client prints `echo:hello S1lent`.
 
-## Windows IP traffic through Wintun
+## Windows IP traffic
 
-Place the official `wintun.dll` beside the executables. Start the server with `--tun S1lent` and the client with `--tun S1lent`. Windows adapter addresses, routes, MTU, and forwarding are configured separately. The current S1lent packet limit is 1156 bytes per IP packet; larger packets require fragmentation, which is not implemented.
+Put the official `wintun.dll` beside the executables, then start the client and server with `--tun S1lent`. Windows adapter addresses, routes, MTU, forwarding, and firewall rules must be configured for the host separately.
 
-The project is experimental; full Windows IP forwarding and performance have not yet been validated.
+The current S1lent packet limit is **1156 bytes per IP packet**. Fragmentation is not implemented, and end-to-end OS traffic through a configured Wintun adapter has not yet been validated.
+
+<br>
+
+<div align="center">
+  <sub>Experimental software · No throughput or latency claims</sub>
+</div>
