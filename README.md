@@ -1,6 +1,6 @@
 # S1lent / Universal IP
 
-S1lent is an experimental network protocol designed around persistent encrypted sessions and Universal IP routing. Universal IP is the ordered routing model above S1lent; it is not a new IP protocol, address family, or replacement for IPv4/IPv6. S1lent is not an HTTP wrapper.
+S1lent is an experimental encrypted overlay for carrying ordinary IPv4/IPv6 traffic through configurable routes of relay nodes. Universal IP is its routing model, not a replacement IP protocol.
 
 The prototype contains a TLS 1.3 server-authenticated handshake, per-session TLS-exported AES-256-GCM keys, route setup, replay checks, static routing, Windows UDP transport, a dynamically loaded Wintun adapter, separate node/client/server executables, and a two-node encrypted round-trip harness.
 
@@ -57,6 +57,4 @@ The client prints `echo:hello S1lent`.
 
 Place the official `wintun.dll` beside the executables. Start the server with `--tun S1lent` and the client with `--tun S1lent`. Windows adapter addresses, routes, MTU, and forwarding are configured separately. The current S1lent packet limit is 1156 bytes per IP packet; larger packets require fragmentation, which is not implemented.
 
-## Next
-
-The next step is to strengthen session lifecycle handling and validate OS IP traffic through Wintun on a configured Windows host. Performance work comes after the end-to-end path is reliable. This project is experimental and makes no throughput or latency claims.
+The project is experimental; full Windows IP forwarding and performance have not yet been validated.
